@@ -11,11 +11,14 @@ import fr.petstore.model.FishLivEnv;
 import fr.petstore.model.PetStore;
 import fr.petstore.model.ProdType;
 import fr.petstore.model.Product;
+import fr.petstore.service.AddressService;
+import fr.petstore.service.AnimalService;
+import fr.petstore.service.PetStoreService;
+import fr.petstore.service.ProductService;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.EntityTransaction;
 import jakarta.persistence.Persistence;
-import jakarta.persistence.Query;
 
 public class Main {
     
@@ -26,101 +29,49 @@ public class Main {
         
         tx.begin();
         
-        // On crée notre animalerie de ouf avec son adresse
-        PetStore ps1 = new PetStore("PetStore Paris", "Jean");
-        Address a1 = new Address("10", "Rue Paris", "75001", "Paris");
-        ps1.setAddress(a1);
-        a1.setPetStore(ps1);
-        em.persist(ps1);
+        // Initialisation des services
+        PetStoreService petStoreService = new PetStoreService(em);
+        AddressService addressService = new AddressService(em);
+        ProductService productService = new ProductService(em);
+        AnimalService animalService = new AnimalService(em);
         
-        // D'autres animaleries si t'en veux plus
-        /* 
-        PetStore ps2 = new PetStore("PetStore Lyon", "Marie");
-        Address a2 = new Address("20", "Rue Lyon", "69001", "Lyon");
-        ps2.setAddress(a2);
-        a2.setPetStore(ps2);
-        em.persist(ps2);
+        // Création d'une animalerie avec son adresse
+        Address address = addressService.createAddress("10", "Rue Paris", "75001", "Paris");
+        PetStore petStore = petStoreService.createPetStoreWithAddress("PetStore Paris", "Jean", address);
         
-        PetStore ps3 = new PetStore("PetStore Marseille", "Pierre");
-        Address a3 = new Address("30", "Rue Marseille", "13001", "Marseille");
-        ps3.setAddress(a3);
-        a3.setPetStore(ps3);
-        em.persist(ps3);
-        */
+        // Création de produits pour l'animalerie
+        Product product1 = productService.createProductForPetStore("FOOD001", "Croquettes premium", ProdType.FOOD, 29.99, petStore);
+        Product product2 = productService.createProductForPetStore("ACC001", "Jouet pour chat", ProdType.ACCESSORY, 12.50, petStore);
+        Product product3 = productService.createProductForPetStore("CLEAN001", "Nettoyant aquarium", ProdType.CLEANING, 8.75, petStore);
         
-        // Ajout de quelques produits à vendre
-        Product p1 = new Product("F001", "Croquettes", ProdType.FOOD);
-        p1.setPetStore(ps1);
-        em.persist(p1);
+        // Création d'animaux
+        Cat cat1 = animalService.createCat(new Date(), "Noir", "CHIP001");
+        Cat cat2 = animalService.createCat(new Date(), "Blanc", "CHIP002");
+        Fish fish1 = animalService.createFish(new Date(), "Rouge", FishLivEnv.FRESH_WATER);
         
-        Product p2 = new Product("A001", "Jouet", ProdType.ACCESSORY);
-        p2.setPetStore(ps1);
-        em.persist(p2);
+        // Association des animaux à l'animalerie
+        petStoreService.addAnimalToPetStore(petStore, cat1);
+        petStoreService.addAnimalToPetStore(petStore, cat2);
+        petStoreService.addAnimalToPetStore(petStore, fish1);
         
-        Product p3 = new Product("C001", "Shampoing", ProdType.CLEANING);
-        p3.setPetStore(ps1);
-        em.persist(p3);
-        
-        // D'autres produits si besoin
-        /*
-        Product p4 = new Product("F002", "Pâtée", ProdType.FOOD);
-        p4.setPetStore(ps1);
-        em.persist(p4);
-        
-        Product p5 = new Product("A002", "Cage", ProdType.ACCESSORY);
-        p5.setPetStore(ps1);
-        em.persist(p5);
-        
-        Product p6 = new Product("C002", "Brosse", ProdType.CLEANING);
-        p6.setPetStore(ps1);
-        em.persist(p6);
-        */
-        
-        // On met quelques chats trop mignons
-        Cat c1 = new Cat(new Date(), "Noir", "C123");
-        c1.setPetStore(ps1);
-        em.persist(c1);
-        
-        Cat c2 = new Cat(new Date(), "Blanc", "C456");
-        c2.setPetStore(ps1);
-        em.persist(c2);
-        
-        // Un chat en plus si tu veux
-        /*
-        Cat c3 = new Cat(new Date(), "Roux", "C789");
-        c3.setPetStore(ps1);
-        em.persist(c3);
-        */
-        
-        // Et un poisson rouge (enfin bleu)
-        Fish f1 = new Fish(new Date(), "Bleu", FishLivEnv.FRESH_WATER);
-        f1.setPetStore(ps1);
-        em.persist(f1);
-        
-        // D'autres poissons pour l'aquarium
-        /*
-        Fish f2 = new Fish(new Date(), "Rouge", FishLivEnv.SEA_WATER);
-        f2.setPetStore(ps1);
-        em.persist(f2);
-        
-        Fish f3 = new Fish(new Date(), "Jaune", FishLivEnv.FRESH_WATER);
-        f3.setPetStore(ps1);
-        em.persist(f3);
-        */
-        
+        // Commit des changements
         tx.commit();
         
-        // On récup tous les animaux de notre animalerie
-        Query q = em.createQuery("SELECT a FROM Animal a WHERE a.petStore.id = :id");
-        q.setParameter("id", ps1.getId());
-        List<Animal> animals = q.getResultList();
+        // Récupération et affichage des animaux de l'animalerie
+        System.out.println("Liste des animaux dans l'animalerie " + petStore.getName() + ":");
+        List<Animal> animals = petStoreService.getAllAnimalsInPetStore(petStore.getId());
         
-        System.out.println("Animaux de l'animalerie:");
-        for (Animal a : animals) {
-            System.out.println(a.getClass().getSimpleName());
-            System.out.println(a.getCouleur());
+        for (Animal animal : animals) {
+            if (animal instanceof Cat) {
+                Cat cat = (Cat) animal;
+                System.out.println("Chat: " + cat.getCouleur() + " - Puce: " + cat.getChipId());
+            } else if (animal instanceof Fish) {
+                Fish fish = (Fish) animal;
+                System.out.println("Poisson: " + fish.getCouleur() + " - Environnement: " + fish.getLivingEnv());
+            }
         }
         
+        // Fermeture des ressources
         em.close();
         emf.close();
     }
