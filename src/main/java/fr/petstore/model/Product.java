@@ -29,17 +29,14 @@ public class Product {
     @Column(name = "type")
     private ProdType type;
     
+    @Column(name = "price")
+    private double price;
+    
     @ManyToOne
     @JoinColumn(name = "petstore_id")
     private PetStore petStore;
     
     public Product() {
-    }
-    
-    public Product(String code, String label, ProdType type) {
-        this.code = code;
-        this.label = label;
-        this.type = type;
     }
     
     public Long getId() {
@@ -72,6 +69,14 @@ public class Product {
 
     public void setType(ProdType type) {
         this.type = type;
+    }
+    
+    public double getPrice() {
+        return price;
+    }
+
+    public void setPrice(double price) {
+        this.price = price;
     }
 
     public PetStore getPetStore() {
