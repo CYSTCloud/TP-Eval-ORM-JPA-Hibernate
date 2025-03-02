@@ -42,15 +42,6 @@ Le programme utilise Hibernate pour :
 - Insérer des données d'exemple : une animalerie, des produits et des animaux
 - Exécuter une requête JPQL pour récupérer et afficher les animaux
 
-## Architecture du projet
-
-Le projet suit une architecture en couches simplifiée :
-
-1. **Couche Modèle** (`fr.petstore.model`) : Contient les entités JPA (Animal, Cat, Fish, PetStore, etc.)
-2. **Couche DAO** (`fr.petstore.dao`) : Contient les classes d'accès aux données
-3. **Couche Service** (`fr.petstore.service`) : Contient la logique métier
-4. **Couche Application** (`fr.petstore.app`) : Point d'entrée de l'application
-
 ## Remarques
 
 - Les tables sont recréées à chaque lancement (mode `create` dans persistence.xml)
